@@ -64,12 +64,22 @@ def get_hand_level(hand):
     for card in hand:
         # create suited cards count dictionary and sort it
         dict_suit[card[0]] = dict_suit.get(card[0], []) + [card]
+        # TODO Don't need this dict sorted, only need the monst suited element
         dict_suit_sorted = dict(
             sorted(dict_suit.items(), key=lambda kv: len(kv[1]), reverse=True)
         )
+        # TODO Don't need this list, only need the most suited element
         list_suit_count = [
             (key, len(dict_suit_sorted[key])) for key in dict_suit_sorted
         ]
+        ############################
+        list_most_suited = [(key, len(dict_suit[key])) for key in dict_suit]
+        list_most_suited.sort(key=lambda e: e[1])
+        most_suited_cards = dict_suit[list_most_suited[0][0]]
+        most_suited_cards.sort(key=lambda e: e[1])
+        ############################
+        list_cards_suited = max(dict_suit.values(), key=lambda i: len(i))
+        ##############################
 
         # create repeated cards count dictionary and sort it
         dict_repeated[card[1]] = dict_repeated.get(card[1], []) + [card]
@@ -86,25 +96,34 @@ def get_hand_level(hand):
     check_figures_straight = is_straight(list_figure_sorted)
 
     # Straight Flush
-    if list_suit_count[0][1] >= 5:  # TODO change condition
-        # TODO Don't need to sort dict_suited, can sort the suited cards here
-        list_suited_figures = [
-            card[1] for card in dict_suit_sorted[list_suit_count[0][0]]
-        ]
-        list_suited_figures.sort(reverse=True)
-        if is_straight(list_suited_figures)[0]:
+    if len(list_cards_suited) >= 5:
+        ##################TODO to be deleted TODO##################
+        # list_suited_figures = [
+        #     card[1] for card in dict_suit_sorted[list_suit_count[0][0]]
+        # ]
+        # list_suited_figures.sort(reverse=True)
+        ###########################################################
+        list_figures_suited = [card[1] for card in list_cards_suited]
+        list_figures_suited.sort(reverse=True)
+        ###########################################################
+        if is_straight(list_figures_suited)[0]:
             hand_level = 8
             hand_result = [
                 dict_repeated_sorted[figure][0]
-                for figure in is_straight(list_suited_figures)[1]
+                for figure in is_straight(list_figures_suited)[1]
             ]
         # Flush
         else:
             hand_level = 5
+            ###############################################
+            # hand_result = sorted(
+            #     dict_suit_sorted[list_suit_count[0][0]],
+            #     key=lambda card: card[1],
+            #     reverse=True,
+            # )[:5]
+            ################################################
             hand_result = sorted(
-                dict_suit_sorted[list_suit_count[0][0]],
-                key=lambda card: card[1],
-                reverse=True,
+                list_cards_suited, key=lambda card: card[1], reverse=True
             )[:5]
     # Straight
     elif check_figures_straight[0]:
