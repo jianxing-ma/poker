@@ -30,35 +30,19 @@ CARDFIGURE = {
     14: "A",
 }
 
-# create card deck
-deck = []
-for i in ("♠", "♦", "♥", "♣"):
-    for j in range(2, 15):
-        deck.append((i, j))
-
 
 def main():
-    # deal player1 cards
-    hand_player1 = []
-    for i in range(2):
-        hand_player1.append(deal(deck))
-    # print(f"\nPlayer 1's hole cards: {show_hand(hand_player1)}\n")
+    # create card deck
+    deck = []
+    for i in ("♠", "♦", "♥", "♣"):
+        for j in range(2, 15):
+            deck.append((i, j))
 
-    # deal community cards
-    community_cards = []
-    for i in range(5):
-        community_cards.append(deal(deck))
-    # print(f"\nCommunity cards are: {show_hand(community_cards)}\n")
-
-    hand_player1 += community_cards
-
-    # print(
-    #     f"\nPlayer 1's hand is {HANDLEVEL[get_hand_result(hand_player1)[0]]}: {show_hand(get_hand_result(hand_player1)[1])}\n"
-    # )
+    ######################  TEST WINNING POSSIBILITY ####################
 
     dict_test_level_count = {}
 
-    for i in range(1):  # number of test cases to run
+    for i in range(100):  # number of test cases to run
         # create deck
         test_deck = []
         for j in ("♠", "♦", "♥", "♣"):
@@ -75,20 +59,19 @@ def main():
         test_hand = test_hole_cards + test_community_cards
 
         # add test hand level result to dict
-        dict_test_level_count[HANDLEVEL[get_hand_result(test_hand)[0]]] = (
-            dict_test_level_count.get(HANDLEVEL[get_hand_result(test_hand)[0]], 0) + 1
-        )
+        # dict_test_level_count[HANDLEVEL[get_hand_result(test_hand)[0]]] = (
+        #     dict_test_level_count.get(HANDLEVEL[get_hand_result(test_hand)[0]], 0) + 1
+        # )
 
-        calc_winning_possibility(
-            get_hand_result(test_hand), test_community_cards, test_deck
-        )
-
-        print("TEST PLAYER Hole cards: ", show_hand(test_hole_cards))
-        print("Community cards: ", show_hand(test_community_cards))
+        print(f"\n{show_hand(test_hole_cards)}  |  {show_hand(test_community_cards)}")
 
         print(
-            f"\n{HANDLEVEL[get_hand_result(test_hand)[0]]}: {show_hand(get_hand_result(test_hand)[1])}\n"
+            f"{HANDLEVEL[get_hand_result(test_hand)[0]]}: {show_hand(get_hand_result(test_hand)[1])}"
         )
+        print(
+            f"Test Player's winning possibility is: {calc_winning_possibility(get_hand_result(test_hand), test_community_cards, test_deck)}%\n"
+        )
+
     # print(
     #     dict(sorted(dict_test_level_count.items(), key=lambda kv: kv[1], reverse=True))
     # )
@@ -109,42 +92,45 @@ def calc_winning_possibility(self_hand_result, community_cards, deck):
         for j in range(i + 1, 45):
             # TODO Delete
             case_check_count += 1
-            print("Case check #: ", case_check_count)
+
+            # print("Case check #: ", case_check_count)
 
             oppo_cards = [card for card in community_cards]
             oppo_cards.append(deck[i])
             oppo_cards.append(deck[j])
 
             oppo_hand_result = get_hand_result(oppo_cards)
-            print(
-                "Oppo's hand: ",
-                HANDLEVEL[oppo_hand_result[0]],
-                " ",
-                show_hand(oppo_hand_result[1]),
-            )
+
+            # print(
+            #     "Oppo's hand: ",
+            #     HANDLEVEL[oppo_hand_result[0]],
+            #     " ",
+            #     show_hand(oppo_hand_result[1]),
+            # )
 
             if self_hand_result[0] < oppo_hand_result[0]:
                 lose_count += 1
-                print("Different level, Count of losing cases: ", lose_count, "\n")
+                # print("Different level, Count of losing cases: ", lose_count, "\n")
                 continue
             elif self_hand_result[0] == oppo_hand_result[0]:
                 for card in range(5):
                     if self_hand_result[1][card][1] < oppo_hand_result[1][card][1]:
                         lose_count += 1
-                        print("Same level, Count of losing cases: ", lose_count, "\n")
+                        # print("Same level, Count of losing cases: ", lose_count, "\n")
                         break
                     elif self_hand_result[1][card][1] > oppo_hand_result[1][card][1]:
-                        print("Same level, self won", "\n")
+                        # print("Same level, self won", "\n")
                         break
-
+                    else:
+                        pass
             else:
-                print("Different level, Self won", "\n")
+                # print("Different level, Self won", "\n")
+                pass
 
     winning_ratio = math.floor(
         100 * (1 - (lose_count / (len(deck) * (len(deck) - 1) / 2)))
     )
 
-    print(f"Test Player's winning possibility is: {winning_ratio}%")
     return winning_ratio
 
 
@@ -254,5 +240,5 @@ def show_hand(hand):
 
 
 if __name__ == "__main__":
-    while input("Enter to play or any key to exit: ") == "":
+    while input("Enter to play or any key to exit: \n") == "":
         main()
