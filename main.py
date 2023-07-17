@@ -42,7 +42,7 @@ def main():
 
     dict_test_level_count = {}
 
-    for i in range(100):  # number of test cases to run
+    for i in range(1):  # number of test cases to run
         # create deck
         test_deck = []
         for j in ("♠", "♦", "♥", "♣"):
@@ -63,13 +63,14 @@ def main():
         #     dict_test_level_count.get(HANDLEVEL[get_hand_result(test_hand)[0]], 0) + 1
         # )
 
+        print(
+            f"Test Player's winning possibility is: {calc_winning_possibility(get_hand_result(test_hand), test_community_cards, test_deck)}%\n"
+        )
+
         print(f"\n{show_hand(test_hole_cards)}  |  {show_hand(test_community_cards)}")
 
         print(
             f"{HANDLEVEL[get_hand_result(test_hand)[0]]}: {show_hand(get_hand_result(test_hand)[1])}"
-        )
-        print(
-            f"Test Player's winning possibility is: {calc_winning_possibility(get_hand_result(test_hand), test_community_cards, test_deck)}%\n"
         )
 
     # print(
@@ -85,6 +86,8 @@ def main():
 ### Calculate winning possibility
 def calc_winning_possibility(self_hand_result, community_cards, deck):
     lose_count = 0
+    win_count = 0
+    tie_count = 0
 
     case_check_count = 0
 
@@ -93,7 +96,7 @@ def calc_winning_possibility(self_hand_result, community_cards, deck):
             # TODO Delete
             case_check_count += 1
 
-            # print("Case check #: ", case_check_count)
+            print("Case check #: ", case_check_count)
 
             oppo_cards = [card for card in community_cards]
             oppo_cards.append(deck[i])
@@ -101,37 +104,63 @@ def calc_winning_possibility(self_hand_result, community_cards, deck):
 
             oppo_hand_result = get_hand_result(oppo_cards)
 
-            # print(
-            #     "Oppo's hand: ",
-            #     HANDLEVEL[oppo_hand_result[0]],
-            #     " ",
-            #     show_hand(oppo_hand_result[1]),
-            # )
+            print(
+                f"Oppo's hand: {show_hand([deck[i], deck[j]])}\n{HANDLEVEL[oppo_hand_result[0]]} {show_hand(oppo_hand_result[1])}"
+            )
 
-            if self_hand_result[0] < oppo_hand_result[0]:
+            # if self_hand_result[0] < oppo_hand_result[0]:
+            #     lose_count += 1
+            #     # print("Different level, Count of losing cases: ", lose_count, "\n")
+            #     continue
+            # elif self_hand_result[0] == oppo_hand_result[0]:
+            #     for card in range(5):
+            #         if self_hand_result[1][card][1] < oppo_hand_result[1][card][1]:
+            #             lose_count += 1
+            #             # print("Same level, Count of losing cases: ", lose_count, "\n")
+            #             break
+            #         elif self_hand_result[1][card][1] > oppo_hand_result[1][card][1]:
+            #             # print("Same level, self won", "\n")
+            #             break
+            #         else:
+            #             pass
+            # else:
+            #     # print("Different level, Self won", "\n")
+            #     pass
+
+            compare_hands_result = compare_hands(self_hand_result, oppo_hand_result)
+
+            if compare_hands_result == -1:
                 lose_count += 1
-                # print("Different level, Count of losing cases: ", lose_count, "\n")
-                continue
-            elif self_hand_result[0] == oppo_hand_result[0]:
-                for card in range(5):
-                    if self_hand_result[1][card][1] < oppo_hand_result[1][card][1]:
-                        lose_count += 1
-                        # print("Same level, Count of losing cases: ", lose_count, "\n")
-                        break
-                    elif self_hand_result[1][card][1] > oppo_hand_result[1][card][1]:
-                        # print("Same level, self won", "\n")
-                        break
-                    else:
-                        pass
-            else:
-                # print("Different level, Self won", "\n")
-                pass
+                print("LOSE count: ", lose_count, "\n")
+            elif compare_hands_result == 0:
+                tie_count += 1
+                print("TIE count: ", tie_count, "\n")
+            elif compare_hands_result == 1:
+                win_count += 1
+                print("WIN count: ", win_count, "\n")
 
     winning_ratio = math.floor(
         100 * (1 - (lose_count / (len(deck) * (len(deck) - 1) / 2)))
     )
 
     return winning_ratio
+
+
+### Compare two players' hands
+def compare_hands(self_hand_result, oppo_hand_result):
+    if self_hand_result[0] < oppo_hand_result[0]:
+        return -1
+    elif self_hand_result[0] == oppo_hand_result[0]:
+        for card in range(5):
+            if self_hand_result[1][card][1] < oppo_hand_result[1][card][1]:
+                return -1
+            elif self_hand_result[1][card][1] > oppo_hand_result[1][card][1]:
+                return 1
+            else:
+                pass
+        return 0
+    else:
+        return 1
 
 
 ### Get player's hand-level
@@ -159,6 +188,7 @@ def get_hand_result(hand):
     list_figure_sorted = sorted(list(dict_repeated.keys()), reverse=True)
     check_figures_straight = is_straight(list_figure_sorted)
 
+    # At least Flush
     if len(list_cards_suited) >= 5:
         list_figures_suited = [card[1] for card in list_cards_suited]
         list_figures_suited.sort(reverse=True)
@@ -185,20 +215,31 @@ def get_hand_result(hand):
         # Quads
         if list_repeated_count[0][1] == 4:
             hand_level = 7
-        # Full House
-        elif list_repeated_count[0][1] == 3 and list_repeated_count[1][1] == 2:
+        # Full-House
+        elif list_repeated_count[0][1] == 3 and list_repeated_count[1][1] >= 2:
             hand_level = 6
-        elif len(list_repeated_count) <= 5:
+        # Three Pairs Still counts as Two-Pair
+        elif len(list_repeated_count) == 4:
+            hand_level = 2
+            # Single card's figure is larger than the smallest pair
+            if list_repeated_count[2][0] < list_repeated_count[3][0]:
+                return (
+                    hand_level,
+                    dict_repeated_sorted[list_repeated_count[0][0]]
+                    + dict_repeated_sorted[list_repeated_count[1][0]]
+                    + dict_repeated_sorted[list_repeated_count[3][0]],
+                )
+        elif len(list_repeated_count) == 5:
             # Trips
             if list_repeated_count[0][1] == 3:
                 hand_level = 3
-            # Two Pair
+            # Two-Pair
             else:
                 hand_level = 2
-        # One Pair
+        # One-Pair
         elif len(list_repeated_count) == 6:
             hand_level = 1
-        # High Cards
+        # High-Cards
         else:
             hand_level = 0
         hand_result = retrieve_hand_result(dict_repeated_sorted)
@@ -218,9 +259,6 @@ def is_straight(list_cards):
 def retrieve_hand_result(dict_hand):
     hand_result = []
 
-    # for i in range(n):
-    #     hand_result += dict_hand[list_hand[i][0]]
-    # return hand_result
     for key in dict_hand:
         hand_result += dict_hand[key]
     return hand_result[:5]
