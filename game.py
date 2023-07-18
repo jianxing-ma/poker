@@ -1,5 +1,5 @@
+#!usr/bin/python3
 from poker import *
-import math
 
 
 def execute():
@@ -8,10 +8,15 @@ def execute():
     user_stack = 1000
     machine_stack = 1000
 
-    while user_stack >= 0 and machine_stack >= 0:
-        bet = 10
-        user_stack -= bet
-        machine_stack -= bet
+    is_playing = True
+    print(f"\nYour stack: {user_stack}  |   Machine stack: {machine_stack}\n")
+
+    while user_stack >= 0 and machine_stack >= 0 and is_playing == True:
+        blind = 10
+        user_stack -= blind
+        machine_stack -= blind
+
+        pot = blind * 2
 
         # Get new deck
         deck = new_deck()
@@ -55,95 +60,123 @@ def execute():
             machine_action = 1
             machine_bet = random.randint(1, machine_stack)
 
-        user_action = input("Please take action (Bet[B] | Check[C]): ").upper()
+        user_action = input("\nPlease take action (Bet[B] | Check[C]): ").upper()
+
+        # ____________________________________Game Logic____________________________________#
 
         if user_action == "C":
-            if machine_action == 1:
-                user_action = input(
-                    f"Machine betted {machine_bet}.\nPlease Choose your action (Call[C] | Raise(R) | Fold[F]): "
-                ).upper()
+            if machine_action == 1:  # Machine bets
+                #############################################################
 
-                if user_action == "C":
-                    print("You called")
+                player_reply = user_reply(machine_bet, user_stack, machine_stack)
 
-                    bet += min(machine_bet, user_stack)
+                # Update players stack
+                user_stack -= player_reply[0]
+                machine_stack -= player_reply[0]
+                # Update pot
+                pot += player_reply[0] * 2
 
-                    print_result_action(round_result)
-
-                elif user_action == "R":
-                    user_reraise = int(
-                        input(f"Your stack: {user_stack}\nPlease enter raise amount: ")
-                    )
-
-                    print("Machine called")
-                    bet += min(user_reraise, machine_stack)
-
-                    print_result_action(round_result)
-                elif user_action == "F":
+                if player_reply[1] == "F":
                     round_result = -1
-                    print("You folded.\n")
 
             else:
-                print("Machine also checked\n")
-                print_result_action(round_result)
+                print("\nMachine also checked\n")
 
         elif user_action == "B":
             user_bet = int(
-                input(f"Your stack: {user_stack}\nPlease enter bet amount: ")
+                input(f"\nYour stack: {user_stack}\nPlease enter bet amount: ")
             )
 
             if machine_action == 1:
                 if machine_bet > user_bet:
-                    print(f"Machine raised!")
-                    user_action = input(
-                        f"Machine betted {machine_bet}. Please Choose your action (Call[C] | Raise  (R) | Fold[F])  : "
-                    ).upper()
+                    print(f"\nMachine raised!")
+                    ###################################################################
+                    player_reply = user_reply(machine_bet, user_stack, machine_stack)
 
-                    if user_action == "C":
-                        print("You called\n")
-                        bet += max(machine_bet, user_stack)
+                    # Update players stack
+                    user_stack -= player_reply[0]
+                    machine_stack -= player_reply[0]
+                    # Update pot
+                    pot += player_reply[0] * 2
 
-                        print_result_action(round_result)
-
-                    elif user_action == "R":
-                        bet += int(input("Please enter raise amount: "))
-
-                        print("Machine called\n")
-
-                        print_result_action(round_result)
-
-                    elif user_action == "F":
-                        print("You folded.\n")
-                        bet += user_bet
+                    if player_reply[1] == "F":
+                        round_result = -1
 
                 elif machine_bet == user_bet:
                     print("Machine called\n")
-                    bet += user_bet
-
-                    print_result_action(round_result)
+                    # Update players stack
+                    user_stack -= user_bet
+                    machine_stack -= machine_bet
+                    pot += user_bet * 2
 
                 else:
                     print("Machine folded\n")
                     round_result = 1
-                    print_result_action(round_result)
 
             else:
                 print("Machine folded\n")
                 round_result = 1
-                print_result_action(round_result)
+
+        # ____________________________________End of Logic___________________________________#
+
+        ###################################### Round Result ##################################
+
+        # Show hands
         print(
-            f"Your hand: {HANDLEVEL[user_hand_result[0]]} {show_hand(user_hand_result[1])}"
+            f"Your hand:    {HANDLEVEL[user_hand_result[0]]} {show_hand(user_hand_result[1])}"
         )
         print(
             f"Machine hand: {HANDLEVEL[machine_hand_result[0]]} {show_hand(machine_hand_result[1])}\n"
         )
 
-        user_stack += round_result * bet
-        machine_stack -= round_result * bet
+        # Post show hand operations
+        if round_result == 1:
+            print("You won!\n")
+            user_stack += pot
+        elif round_result == 0:
+            print("Everyone loves a chop!\n")
+            user_stack += pot / 2
+            machine_stack += pot / 2
+        elif round_result == -1:
+            print("You lost..\n")
+            machine_stack += pot
+
         print(f"\nYour stack: {user_stack}  |   Machine stack: {machine_stack}\n")
-        print(
-            "______________________________________________________________________________________\n"
+        print("--------------------------------")
+
+        user_is_playing = input("Enter to play | Any key to exit: ")
+        if user_is_playing != "":
+            is_playing = False
+            print("\nThanks for playing, bye...\n")
+        else:
+            print("\nLet's go!\n")
+            print(
+                "______________________________________________________________________________________\n"
+            )
+
+
+def user_reply(machine_bet, user_stack, machine_stack):
+    user_action = input(
+        f"\nMachine betted {machine_bet}.\nPlease Choose your action (Call[C] | Raise(R) | Fold[F]): "
+    ).upper()
+
+    if user_action == "C":
+        print("\nYou called")
+        bet_plus = min(machine_bet, user_stack)
+
+    elif user_action == "R":
+        user_reraise = int(
+            input(f"\nYour stack: {user_stack}\nPlease enter raise amount: ")
         )
+
+        print("\nMachine called\n")
+        bet_plus = min(user_reraise, machine_stack)
+
+    elif user_action == "F":
+        print("\nYou folded.\n")
+        bet_plus = 0
+
+    return bet_plus, user_action
 
 
 def print_result_action(round_result):
