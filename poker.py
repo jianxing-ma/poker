@@ -1,5 +1,6 @@
 import math
 import random
+import crayons
 
 HANDLEVEL = {
     0: "HIGH-CARD",
@@ -178,7 +179,7 @@ def deal(deck):
 ### create a fresh set of deck
 def new_deck():
     deck = []
-    for i in ("♠", "♦", "♥", "♣"):
+    for i in ("♠", "♥", "♣", "♦"):
         for j in range(2, 15):
             deck.append((i, j))
     return deck
@@ -187,6 +188,19 @@ def new_deck():
 ### helper function to print cards
 def show_hand(hand):
     hand_shown = ""
+
     for card in hand:
-        hand_shown += CARDFIGURE[card[1]] + card[0] + " "
+        colored_card = CARDFIGURE[card[1]] + card[0] + " "
+
+        if card[0] == "♠":
+            hand_shown += crayons.black(colored_card, bold=True)
+        elif card[0] == "♥":
+            hand_shown += crayons.red(colored_card, bold=True)
+        elif card[0] == "♣":
+            hand_shown += crayons.green(colored_card, bold=True)
+        elif card[0] == "♦":
+            hand_shown += crayons.blue(colored_card, bold=True)
+
+        # hand_shown += colored_card
+
     return hand_shown

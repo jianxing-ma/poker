@@ -1,4 +1,3 @@
-#!usr/bin/python3
 from poker import *
 
 
@@ -8,11 +7,21 @@ def execute():
     user_stack = 1000
     machine_stack = 1000
 
-    is_playing = True
-    print(f"\nYour stack: {user_stack}  |   Machine stack: {machine_stack}\n")
+    while user_stack > 0 and machine_stack > 0:
+        print(f"\nYour stack: {user_stack}  |   Machine stack: {machine_stack}\n")
+        print(
+            "______________________________________________________________________________________\n"
+        )
 
-    while user_stack >= 0 and machine_stack >= 0 and is_playing == True:
-        blind = 10
+        user_is_playing = input("Enter to play | Any key to exit: ")
+        if user_is_playing != "":
+            print("\nThanks for playing, bye...\n")
+            break
+        else:
+            print("\nLet's go!\n")
+            print("--------------------------------\n")
+
+        blind = min(10, user_stack, machine_stack)
         user_stack -= blind
         machine_stack -= blind
 
@@ -141,19 +150,6 @@ def execute():
             print("You lost..\n")
             machine_stack += pot
 
-        print(f"\nYour stack: {user_stack}  |   Machine stack: {machine_stack}\n")
-        print("--------------------------------")
-
-        user_is_playing = input("Enter to play | Any key to exit: ")
-        if user_is_playing != "":
-            is_playing = False
-            print("\nThanks for playing, bye...\n")
-        else:
-            print("\nLet's go!\n")
-            print(
-                "______________________________________________________________________________________\n"
-            )
-
 
 def user_reply(machine_bet, user_stack, machine_stack):
     user_action = input(
@@ -191,7 +187,3 @@ def print_result_action(round_result):
 def deal_cards(deck, target, num):
     for i in range(num):
         target.append(deal(deck))
-
-
-# TODO TO BE DELTED
-execute()
